@@ -6,7 +6,7 @@ A console application that uses Retrieval Augmented Generation (RAG) to answer u
 
 This application processes a text file (e.g., `assets/book.txt`) to create a searchable database of content. Users can ask questions, and the application streams answers derived strictly from the context provided by the processed text. If the answer cannot be directly derived from the available context, the response will indicate uncertainty.
 
-Based on: https://github.com/mtayyab2/RAG
+Inspired on: https://github.com/mtayyab2/RAG
 
 ## Technologies Used
 
@@ -17,7 +17,7 @@ Based on: https://github.com/mtayyab2/RAG
   - [Spectre.Console](https://spectreconsole.net/)
   - [Microsoft.Extensions.Configuration](https://docs.microsoft.com/en-us/dotnet/api/microsoft.extensions.configuration)
 
-## Components
+## Major Components
 
                +----------------+
                |   Program.cs   |
@@ -25,7 +25,7 @@ Based on: https://github.com/mtayyab2/RAG
                         |
                         v
              +----------------------+
-             | Database.Initialize  |
+             | Database (DuckDB)    |
              +----------------------+
                         |
                         v
@@ -35,26 +35,15 @@ Based on: https://github.com/mtayyab2/RAG
              +----------------------+
                         |
                         v
-         +--------------------------------+
-         | Processed Text Snippets (DB)   |
-         +--------------------------------+
-                        |
-                        v
              +----------------------+
-             |    QnAService        |
+             |    LLM Service       |
              | (AskQuestionStream)  |
-             +----------------------+
-                        |
-                        v
-             +----------------------+
-             |    LLM Response      |
-             |   (Answer Stream)    |
              +----------------------+
 
 This diagram outlines the main components and their interactions:
 -	Program.cs initializes the application and database.
 -	TextProcessor processes the text file into indexed snippets.
--	QnAService handles user queries by retrieving context from the snippets and streaming answers using the LLM.
+-	LLM Service handles user queries by retrieving context from the snippets and streaming answers using the LLM.
 
 ## How It Works
 
