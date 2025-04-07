@@ -17,6 +17,45 @@ Based on: https://github.com/mtayyab2/RAG
   - [Spectre.Console](https://spectreconsole.net/)
   - [Microsoft.Extensions.Configuration](https://docs.microsoft.com/en-us/dotnet/api/microsoft.extensions.configuration)
 
+## Components
+
+               +----------------+
+               |   Program.cs   |
+               +----------------+
+                        |
+                        v
+             +----------------------+
+             | Database.Initialize  |
+             +----------------------+
+                        |
+                        v
+             +----------------------+
+             |   TextProcessor      |
+             |   (ProcessFile)      |
+             +----------------------+
+                        |
+                        v
+         +--------------------------------+
+         | Processed Text Snippets (DB)   |
+         +--------------------------------+
+                        |
+                        v
+             +----------------------+
+             |    QnAService        |
+             | (AskQuestionStream)  |
+             +----------------------+
+                        |
+                        v
+             +----------------------+
+             |    LLM Response      |
+             |   (Answer Stream)    |
+             +----------------------+
+
+This diagram outlines the main components and their interactions:
+-	Program.cs initializes the application and database.
+-	TextProcessor processes the text file into indexed snippets.
+-	QnAService handles user queries by retrieving context from the snippets and streaming answers using the LLM.
+
 ## How It Works
 
 1. **Initialization**:  
