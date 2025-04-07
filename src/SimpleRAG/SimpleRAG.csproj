@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net9.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<UserSecretsId>d82e25cc-cc7c-49df-a9a5-4f36803d7688</UserSecretsId>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="DuckDB.NET.Data.Full" Version="1.2.1" />
+
+		<PackageReference Include="OpenAI" Version="2.1.0" />
+		<PackageReference Include="Spectre.Console" Version="0.49.1" />
+		<PackageReference Include="Spectre.Console.Cli" Version="0.49.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.3" />
+		<PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.3" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.3" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.3" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="appsettings.json">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="assets\book.txt">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
+</Project>
