@@ -2,7 +2,6 @@
 using Spectre.Console;
 using System.Data;
 using System.Text.Json;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace SimpleRAG;
 
@@ -24,6 +23,9 @@ CREATE TABLE IF NOT EXISTS Documents (
     id INTEGER DEFAULT nextval('Documents_Seq') PRIMARY KEY,
     title TEXT,
     metadata JSON,
+    source TEXT,
+    processor TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     content TEXT
 );
 
@@ -66,16 +68,18 @@ CREATE TABLE IF NOT EXISTS Chunks (
         AnsiConsole.MarkupLine("DuckDB initialized and table created.");
     }
 
-    static int InsertDocument(string title, Dictionary<string, string> metadata, string content)
+    static int InsertDocument(string title, Dictionary<string, string> metadata, string content, string source, string processor)
     {
         using var conn = new DuckDBConnection(Settings.ConnectionString);
         conn.Open();
         using var cmd = conn.CreateCommand();
 
-        cmd.CommandText = "INSERT INTO Documents (title, metadata, content) VALUES ($title, $metadata, $content) RETURNING id;";
+        cmd.CommandText = "INSERT INTO Documents (title, metadata, content, source, processor) VALUES ($title, $metadata, $content, $source, $processor) RETURNING id;";
         cmd.Parameters.AddWithValue("title", title);
         cmd.Parameters.AddWithValue("metadata", JsonSerializer.Serialize(metadata));
         cmd.Parameters.AddWithValue("content", content);
+        cmd.Parameters.AddWithValue("source", source);
+        cmd.Parameters.AddWithValue("processor", processor);
 
         var result = cmd.ExecuteScalar();
         return result == null ? throw new InvalidOperationException("Failed to insert document and retrieve the ID.") : (int)result;
@@ -96,9 +100,17 @@ CREATE TABLE IF NOT EXISTS Chunks (
         command.ExecuteNonQuery();
     }
 
-    public static int InsertDocument(DocumentEmbed document, string text)
+    public static int InsertDocument(DocumentEmbed document, string text, string source, string processor)
     {
-        var documentId = InsertDocument(document["fileName"], document.Properties, text);
+        // Check if the document already exists in the database
+        if (DocumentExists(source, processor))
+        {
+            AnsiConsole.MarkupLine("[bold yellow]Document already exists in the database. Skipping insertion.[/]");
+            return -1; // Indicate that the document was not inserted
+        }
+
+        var title = document.Properties.ContainsKey("title") ? document.Properties["title"] : document.Properties["fileName"];
+        var documentId = InsertDocument(title, document.Properties, text, source, processor);
 
         foreach (var item in document.Paragraphs)
         {
@@ -106,6 +118,20 @@ CREATE TABLE IF NOT EXISTS Chunks (
         }
 
         return documentId;
+    }
+
+    public static bool DocumentExists(string source, string processor)
+    {
+        using var conn = new DuckDBConnection(Settings.ConnectionString);
+        conn.Open();
+        using var cmd = conn.CreateCommand();
+
+        cmd.CommandText = "SELECT COUNT(*) FROM Documents WHERE source = $source AND processor = $processor;";
+        cmd.Parameters.AddWithValue("source", source);
+        cmd.Parameters.AddWithValue("processor", processor);
+
+        var result = cmd.ExecuteScalar();
+        return result != null && (long)result > 0;
     }
 
     internal static string RetrieveRelevantText(float[] queryEmbedding, int topK = 3)

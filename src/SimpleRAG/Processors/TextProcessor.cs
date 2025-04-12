@@ -15,6 +15,12 @@ public class TextProcessor
             throw new FileNotFoundException(filePath);
         }
 
+        if (Database.DocumentExists(filePath, "TextProcessor"))
+        {
+            AnsiConsole.MarkupLine("[bold yellow]File already processed. Skipping...[/]");
+            return null;
+        }
+
         var documentEmbed = new DocumentEmbed();
 
         documentEmbed.Properties.Add("filePath", filePath);
@@ -50,7 +56,7 @@ public class TextProcessor
 #endif
 
 
-        Database.InsertDocument(documentEmbed, text);
+        Database.InsertDocument(documentEmbed, text, filePath, "TextProcessor");
 
         AnsiConsole.MarkupLine("[bold green]All chunks processed and stored in DuckDB.[/]");
 
