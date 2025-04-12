@@ -134,34 +134,6 @@ CREATE TABLE IF NOT EXISTS Chunks (
         return result != null && (long)result > 0;
     }
 
-    internal static string RetrieveRelevantText(float[] queryEmbedding, int topK = 3)
-    {
-        using var connection = new DuckDBConnection(Settings.ConnectionString);
-        connection.Open();
-
-        using var command = connection.CreateCommand();
-        command.CommandText = @"
-            SELECT text, embedding FROM embeddings
-        ";
-
-        using var reader = command.ExecuteReader();
-        var results = new List<(string text, float similarity)>();
-
-        while (reader.Read())
-        {
-            string text = reader.GetString(0);
-
-            var floatList = (List<float>)reader["embedding"];  // DuckDB.NET returns List<float>
-            float[] storedEmbedding = floatList.ToArray();
-
-            float similarity = CosineSimilarity(queryEmbedding, storedEmbedding);
-            results.Add((text, similarity));
-        }
-
-        // Sort results by similarity (descending) and return top K
-        return string.Join("\n", results.OrderByDescending(r => r.similarity).Take(topK).Select(r => r.text));
-    }
-
     static float CosineSimilarity(float[] vec1, float[] vec2)
     {
         double dot = 0.0, normA = 0.0, normB = 0.0;
@@ -174,33 +146,44 @@ CREATE TABLE IF NOT EXISTS Chunks (
         return (float)(dot / (Math.Sqrt(normA) * Math.Sqrt(normB)));
     }
 
-    public static IEnumerable<string> RetrieveRelevantChunks(float[] queryEmbedding, int topK = 3)
+    public static IEnumerable<(string title, string text, string processor)> RetrieveRelevantChunks(float[] queryEmbedding, int topK = 3, double similarityThreshold = 0.5)
     {
         using var connection = new DuckDBConnection(Settings.ConnectionString);
         connection.Open();
 
         using var command = connection.CreateCommand();
-        command.CommandText = @"
-            SELECT text, embedding FROM embeddings
+
+        // Convert the query embedding to a string representation for DuckDB
+        string queryEmbeddingStr = "[" + string.Join(",", queryEmbedding) + "]";
+
+        command.CommandText = @$"
+          SELECT
+              d.title,
+              e.text,
+              d.processor,
+              list_cosine_similarity(e.embedding, {queryEmbeddingStr}) AS similarity
+          FROM embeddings e
+          JOIN Documents d ON e.document_id = d.id
+          WHERE list_cosine_similarity(e.embedding, {queryEmbeddingStr}) >= $similarityThreshold
+          ORDER BY similarity DESC
+          LIMIT $topK;
         ";
 
+        command.Parameters.AddWithValue("topK", topK);
+        command.Parameters.AddWithValue("similarityThreshold", similarityThreshold);
+
         using var reader = command.ExecuteReader();
-        var results = new List<(string text, float similarity)>();
+        var results = new List<(string title, string text, string processor)>();
 
         while (reader.Read())
         {
-            string text = reader.GetString(0);
+            string title = reader.GetString(0);
+            string text = reader.GetString(1);
+            string processor = reader.GetString(2);
 
-            var floatList = (List<float>)reader["embedding"];  // DuckDB.NET returns List<float>
-            float[] storedEmbedding = [.. floatList];
-
-
-            //float[] storedEmbedding =  ConvertFromBlob((byte[])reader[1]);
-            float similarity = CosineSimilarity(queryEmbedding, storedEmbedding);
-            results.Add((text, similarity));
+            results.Add((title, text, processor));
         }
 
-        // Sort results by similarity (descending) and return top K
-        return results.OrderByDescending(r => r.similarity).Take(topK).Select(r => r.text);
+        return results;
     }
 }

@@ -3,6 +3,7 @@ using SimpleRAG;
 using SimpleRAG.Processors;
 using SimpleRAG.Services;
 using Spectre.Console;
+using System.Text;
 
 Console.WriteLine("Hello Baby!!! Starting the LLM RAG Console App");
 
@@ -43,30 +44,20 @@ async IAsyncEnumerable<string> AskQuestionStream(string question)
 
     if (chunks.Length == 0) yield return "[bold red]No relevant information found.[/]";
 
+    StringBuilder sb = new();
+    foreach (var (title, text, processor) in chunks)
+    {
+        sb.AppendFormat("\n********\nChunk from embedding: [Type: {0}] [Title: {1}]\n\n {2}", processor, title, text);
+    }
+
     string relevantText = string.Join("\n********\nChunk from embedding:\n\n", chunks);
 
     string prompt = $"Based on the following information from the knowledge base, answer the question:" +
-        $"\n\"\"\"\n{relevantText}\n\"\"\"\n" +
+        $"\n\"\"\"\n{sb.ToString()}\n\"\"\"\n" +
         $"Question: {question}";
 
     await foreach (var item in LLMService.GenerateResponseStreamAsync(prompt))
     {
         yield return item;
     }
-}
-
-async Task<string> AskQuestion(string question)
-{
-    AnsiConsole.MarkupLine($"[bold cyan]Processing question: {question}[/]");
-
-    float[] queryEmbedding = await LLMService.GenerateEmbeddingAsync(question);
-    string relevantText = Database.RetrieveRelevantText(queryEmbedding);
-
-    if (string.IsNullOrEmpty(relevantText))
-    {
-        return "No relevant information found.";
-    }
-
-    string prompt = $"Based on the following information, answer the question:\n\n{relevantText}\n\nQuestion: {question}";
-    return await LLMService.GenerateResponseAsync(prompt);
 }
