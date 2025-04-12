@@ -32,19 +32,6 @@ while (true)
     Console.WriteLine();
 }
 
-//System prompts to send with user prompts to instruct the model for chat session
-string SystemPromptRecipeAssistant = @"
-    You are an intelligent assistant for Simple RAG Corp.
-    You are designed to provide helpful answers to user questions about
-    your knowledge base.
-
-    Instructions:
-    - If you're unsure of an answer, say ""I don't know"" and recommend users search themselves.
-    - Your response  should be complete.
-    - Format the content so that it can be printed to the Command Line console.
-
-";
-
 async IAsyncEnumerable<string> AskQuestionStream(string question)
 {
     AnsiConsole.MarkupLine($"[bold cyan]Processing question: {question}[/]");
@@ -58,8 +45,7 @@ async IAsyncEnumerable<string> AskQuestionStream(string question)
 
     string relevantText = string.Join("\n********\nChunk from embedding:\n\n", chunks);
 
-    string prompt = $"{SystemPromptRecipeAssistant}" +
-        $"Based on the following information from the knowledge base, answer the question:" +
+    string prompt = $"Based on the following information from the knowledge base, answer the question:" +
         $"\n\"\"\"\n{relevantText}\n\"\"\"\n" +
         $"Question: {question}";
 
@@ -81,7 +67,6 @@ async Task<string> AskQuestion(string question)
         return "No relevant information found.";
     }
 
-    string prompt = $"{SystemPromptRecipeAssistant}" +
-        $"Based on the following information, answer the question:\n\n{relevantText}\n\nQuestion: {question}";
+    string prompt = $"Based on the following information, answer the question:\n\n{relevantText}\n\nQuestion: {question}";
     return await LLMService.GenerateResponseAsync(prompt);
 }
