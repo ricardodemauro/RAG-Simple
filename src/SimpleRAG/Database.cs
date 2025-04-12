@@ -146,7 +146,7 @@ CREATE TABLE IF NOT EXISTS Chunks (
         return (float)(dot / (Math.Sqrt(normA) * Math.Sqrt(normB)));
     }
 
-    public static IEnumerable<(string title, string text, string processor)> RetrieveRelevantChunks(float[] queryEmbedding, int topK = 3, double similarityThreshold = 0.5)
+    public static IEnumerable<(string title, string text, string processor)> RetrieveRelevantChunks(float[] queryEmbedding, int topK = 3, double similarityThreshold = 0.3)
     {
         using var connection = new DuckDBConnection(Settings.ConnectionString);
         connection.Open();
