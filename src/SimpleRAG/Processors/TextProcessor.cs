@@ -45,7 +45,7 @@ public class TextProcessor
 
             documentEmbed.AddParagraph(chunk, embedding);
 
-            if (i > 0 && i % 15 == 0)
+            if (i > 0 && i % 14 == 0)
             {
                 Console.WriteLine("Waiting for 60 secs");
                 await Task.Delay(60 * 1000);
