@@ -2,10 +2,15 @@
 using SimpleRAG;
 using SimpleRAG.Processors;
 using SimpleRAG.Services;
-using Spectre.Console;
 using System.Text;
 
-Console.WriteLine("Hello Baby!!! Starting the LLM RAG Console App");
+var outputPath = Path.Combine(Directory.GetCurrentDirectory(), "logs", "log.log");
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .WriteTo.File(outputPath)
+    .CreateLogger();
+
+Log.Information("Starting the LLM RAG Console App");
 
 Database.Initialize();
 
@@ -16,17 +21,18 @@ await TextProcessor.ProcessFile(Path.Combine(Directory.GetCurrentDirectory(), "a
 
 while (true)
 {
-    string question = AnsiConsole.Ask<string>("[bold cyan]\nAsk a question (or type 'exit' to quit):[/]") ?? string.Empty;
+    Console.WriteLine("Ask a question (or type 'exit' to quit)");
+    string question = Console.ReadLine() ?? string.Empty;
 
 
     if (question?.ToLower() == "exit")
     {
-        AnsiConsole.MarkupLine("[bold red]Exiting...[/]");
+        Log.Information("[bold red]Exiting...[/]");
         break;
     }
 
     Console.WriteLine($"Answer: ");
-    await foreach (string line in AskQuestionStream(question))
+    await foreach (string line in AskQuestionStream(question ?? throw new ArgumentException()))
     {
         Console.Write(line);
     }
@@ -35,7 +41,7 @@ while (true)
 
 async IAsyncEnumerable<string> AskQuestionStream(string question)
 {
-    AnsiConsole.MarkupLine($"[bold cyan]Processing question: {question}[/]");
+    Log.Information($"[bold cyan]Processing question: {question}[/]");
 
     float[] queryEmbedding = await LLMService.GenerateEmbeddingAsync(question);
     var relevateChunks = Database.RetrieveRelevantChunks(queryEmbedding);

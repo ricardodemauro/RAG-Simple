@@ -1,7 +1,4 @@
 using SimpleRAG.Services;
-using Spectre.Console;
-using Markdig;
-using AngleSharp.Dom;
 
 namespace SimpleRAG.Processors;
 
@@ -15,13 +12,13 @@ public class MarkdownProcessor
     {
         if (Database.DocumentExists(url, PROCESSOR_NAME))
         {
-            AnsiConsole.MarkupLine("[bold yellow]Markdown already processed. Skipping...[/]");
+            Log.Information("[bold yellow]Markdown already processed. Skipping...[/]");
             return;
         }
 
         using var httpClient = new HttpClient();
 
-        AnsiConsole.MarkupLine("[bold yellow]Fetching HTML page...[/]");
+        Log.Information("[bold yellow]Fetching HTML page...[/]");
 
         HttpResponseMessage response;
         try
@@ -42,7 +39,7 @@ public class MarkdownProcessor
         }
         catch (Exception ex)
         {
-            AnsiConsole.MarkupLine("[bold red]Failed to fetch HTML page: {0}[/]", ex.Message);
+            Log.Information("[bold red]Failed to fetch HTML page: {0}[/]", ex.Message);
             throw;
         }
 
@@ -60,13 +57,13 @@ public class MarkdownProcessor
     {
         if (!File.Exists(filePath))
         {
-            AnsiConsole.MarkupLine("[bold red]File not found![/]");
+            Log.Information("[bold red]File not found![/]");
             throw new FileNotFoundException(filePath);
         }
 
         if (Database.DocumentExists(filePath, PROCESSOR_NAME))
         {
-            AnsiConsole.MarkupLine("[bold yellow]Markdown already processed. Skipping...[/]");
+            Log.Information("[bold yellow]Markdown already processed. Skipping...[/]");
             return;
         }
 
@@ -95,7 +92,7 @@ public class MarkdownProcessor
         string plainText = ConvertMarkdownToPlainText(markdownText);
         var chunks = ChunkText(plainText, ['.', '!', '?'], 700);
 
-        AnsiConsole.MarkupLine("[bold yellow]Processing markdown chunks...[/]");
+        Log.Information("[bold yellow]Processing markdown chunks...[/]");
 
 #if SKIP_EMBEDDING
         var path = Path.Combine(Directory.GetCurrentDirectory(), "../../../markdown-embedding.json");
@@ -123,7 +120,7 @@ public class MarkdownProcessor
 
         Database.InsertDocument(documentEmbed, plainText, source, PROCESSOR_NAME);
 
-        AnsiConsole.MarkupLine("[bold green]All markdown chunks processed and stored in DuckDB.[/]");
+        Log.Information("[bold green]All markdown chunks processed and stored in DuckDB.[/]");
     }
 
     static string ConvertMarkdownToPlainText(string markdownText)

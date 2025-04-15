@@ -1,5 +1,4 @@
 ﻿using SimpleRAG.Services;
-using Spectre.Console;
 
 namespace SimpleRAG.Processors;
 
@@ -7,17 +6,17 @@ public class TextProcessor
 {
     static readonly int _maxChunkSize = 500; // Maximum size of a chunk in characters
 
-    public async static Task<DocumentEmbed> ProcessFile(string filePath)
+    public async static Task<DocumentEmbed?> ProcessFile(string filePath)
     {
         if (!File.Exists(filePath))
         {
-            AnsiConsole.MarkupLine("[bold red]File not found![/]");
+            Log.Information("[bold red]File not found![/]");
             throw new FileNotFoundException(filePath);
         }
 
         if (Database.DocumentExists(filePath, "TextProcessor"))
         {
-            AnsiConsole.MarkupLine("[bold yellow]File already processed. Skipping...[/]");
+            Log.Information("[bold yellow]File already processed. Skipping...[/]");
             return null;
         }
 
@@ -29,7 +28,7 @@ public class TextProcessor
         string text = await File.ReadAllTextAsync(filePath);
         var chunks = ChunkText(text, ['.', '!', '?'], 700);
 
-        AnsiConsole.MarkupLine("[bold yellow]Processing chunks...[/]");
+        Log.Information("[bold yellow]Processing chunks...[/]");
 
 #if SKIP_EMBEDDING
         var path = Path.Combine(Directory.GetCurrentDirectory(), "../../../documentEmbedding.json");
@@ -58,7 +57,7 @@ public class TextProcessor
 
         Database.InsertDocument(documentEmbed, text, filePath, "TextProcessor");
 
-        AnsiConsole.MarkupLine("[bold green]All chunks processed and stored in DuckDB.[/]");
+        Log.Information("[bold green]All chunks processed and stored in DuckDB.[/]");
 
         return documentEmbed;
     }

@@ -1,6 +1,5 @@
 ﻿using OpenAI.Chat;
 using OpenAI.Embeddings;
-using Spectre.Console.Cli.Help;
 using System.ClientModel;
 
 namespace SimpleRAG.Services;

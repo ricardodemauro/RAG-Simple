@@ -1,6 +1,4 @@
 ﻿using DuckDB.NET.Data;
-using Spectre.Console;
-using System.Data;
 using System.Text.Json;
 
 namespace SimpleRAG;
@@ -55,7 +53,7 @@ CREATE TABLE IF NOT EXISTS Chunks (
         // Ensure DuckDB database file exists
         if (!File.Exists(Settings.ConnectionString))
         {
-            AnsiConsole.MarkupLine("Creating DuckDB database...");
+            Log.Information("Creating DuckDB database...");
         }
 
         using var connection = new DuckDBConnection(Settings.ConnectionString);
@@ -65,7 +63,7 @@ CREATE TABLE IF NOT EXISTS Chunks (
         command.CommandText = _createDbSql;
         command.ExecuteNonQuery();
 
-        AnsiConsole.MarkupLine("DuckDB initialized and table created.");
+        Log.Information("DuckDB initialized and table created.");
     }
 
     static int InsertDocument(string title, Dictionary<string, string> metadata, string content, string source, string processor)
@@ -105,7 +103,7 @@ CREATE TABLE IF NOT EXISTS Chunks (
         // Check if the document already exists in the database
         if (DocumentExists(source, processor))
         {
-            AnsiConsole.MarkupLine("[bold yellow]Document already exists in the database. Skipping insertion.[/]");
+            Log.Information("[bold yellow]Document already exists in the database. Skipping insertion.[/]");
             return -1; // Indicate that the document was not inserted
         }
 

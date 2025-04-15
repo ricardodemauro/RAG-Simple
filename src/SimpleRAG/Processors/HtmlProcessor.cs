@@ -1,12 +1,10 @@
-using SimpleRAG.Services;
-using Spectre.Console;
-using AngleSharp.Html.Parser;
-using System.Text.RegularExpressions;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
-using System.Text;
+using SimpleRAG.Services;
 using System.Net;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace SimpleRAG.Processors;
 
@@ -18,13 +16,13 @@ public partial class HtmlProcessor
     {
         if (Database.DocumentExists(url, "HtmlProcessor"))
         {
-            AnsiConsole.MarkupLine("[bold yellow]URL already processed. Skipping...[/]");
+            Log.Information("[bold yellow]URL already processed. Skipping...[/]");
             return;
         }
 
         using var httpClient = new HttpClient();
 
-        AnsiConsole.MarkupLine("[bold yellow]Fetching HTML page...[/]");
+        Log.Information("[bold yellow]Fetching HTML page...[/]");
 
         HttpResponseMessage response;
         try
@@ -45,7 +43,7 @@ public partial class HtmlProcessor
         }
         catch (Exception ex)
         {
-            AnsiConsole.MarkupLine("[bold red]Failed to fetch HTML page: {0}[/]", ex.Message);
+            Log.Information("[bold red]Failed to fetch HTML page: {0}[/]", ex.Message);
             throw;
         }
 
@@ -57,7 +55,7 @@ public partial class HtmlProcessor
         var metadata = ExtractMetadata(document);
 
         string title = document.Title ?? string.Empty;
-        AnsiConsole.MarkupLine($"[bold green]Page Title: {title}[/]");
+        Log.Information($"[bold green]Page Title: {title}[/]");
 
         string plainText = ConvertHtmlToPlainText(document);
         var chunks = ChunkText(plainText, ['.', '!', '?'], 700);
@@ -80,7 +78,7 @@ public partial class HtmlProcessor
         }
 
 
-        AnsiConsole.MarkupLine("[bold yellow]Processing HTML chunks...[/]");
+        Log.Information("[bold yellow]Processing HTML chunks...[/]");
 
         for (int i = 0; i < chunks.Count; i++)
         {
@@ -100,7 +98,7 @@ public partial class HtmlProcessor
 
         Database.InsertDocument(documentEmbed, plainText, url, "HtmlProcessor");
 
-        AnsiConsole.MarkupLine("[bold green]All HTML chunks processed and stored in DuckDB.[/]");
+        Log.Information("[bold green]All HTML chunks processed and stored in DuckDB.[/]");
     }
 
     static Dictionary<string, string> ExtractMetadata(IDocument document)
@@ -141,26 +139,6 @@ public partial class HtmlProcessor
 
         var htmlContent = document.Body?.TextContent ?? string.Empty;
         return NormalizeText(htmlContent);
-
-        var sb = new StringBuilder();
-        // Extract meta tags
-        foreach (var meta in document.QuerySelectorAll("meta"))
-        {
-            var name = meta.GetAttribute("name") ?? meta.GetAttribute("property");
-            var content = meta.GetAttribute("content");
-            if (!string.IsNullOrWhiteSpace(name) && !string.IsNullOrWhiteSpace(content))
-            {
-                sb.AppendLine($"[Meta - {name}]: {content}");
-            }
-        }
-
-        // Structured content extraction
-        foreach (var element in document.Body?.Descendants() ?? Array.Empty<IElement>())
-        {
-            ProcessElement(sb, element);
-        }
-
-        return NormalizeText(sb.ToString());
     }
 
     private static void ProcessElement(StringBuilder sb, INode element)
