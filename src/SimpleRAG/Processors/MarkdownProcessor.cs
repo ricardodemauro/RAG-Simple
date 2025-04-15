@@ -142,7 +142,7 @@ public class MarkdownProcessor
         {
             if ((currentChunk + part).Length > _maxChunkSize && currentChunk.Length >= minChars)
             {
-                chunks.Add(currentChunk.Trim());
+                chunks.Add(currentChunk.TrimStart(['\r', '\n', ' ']).TrimEnd());
                 currentChunk = part; // Start a new chunk
             }
             else
@@ -153,7 +153,7 @@ public class MarkdownProcessor
 
         if (!string.IsNullOrEmpty(currentChunk))
         {
-            chunks.Add(currentChunk.Trim());
+            chunks.Add(currentChunk.TrimStart(['\r', '\n', ' ']).TrimEnd());
         }
 
         return chunks;

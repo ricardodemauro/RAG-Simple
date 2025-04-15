@@ -14,10 +14,12 @@ Log.Information("Starting the LLM RAG Console App");
 
 Database.Initialize();
 
-await HtmlProcessor.ProcessHtmlPage("https://gohugo.io/about/license/").ConfigureAwait(false);
-await HtmlProcessor.ProcessHtmlPage("https://www.stevejgordon.co.uk/authenticating-a-github-app-using-a-json-web-token-in-dotnet").ConfigureAwait(false);
-await MarkdownProcessor.ProcessMarkdownUrl("https://raw.githubusercontent.com/AngleSharp/AngleSharp/refs/heads/devel/README.md").ConfigureAwait(false);
-await TextProcessor.ProcessFile(Path.Combine(Directory.GetCurrentDirectory(), "assets/book.txt")).ConfigureAwait(false);
+//await HtmlProcessor.ProcessHtmlPage("https://gohugo.io/about/license/").ConfigureAwait(false);
+//await HtmlProcessor.ProcessHtmlPage("https://www.stevejgordon.co.uk/authenticating-a-github-app-using-a-json-web-token-in-dotnet").ConfigureAwait(false);
+//await MarkdownProcessor.ProcessMarkdownUrl("https://raw.githubusercontent.com/AngleSharp/AngleSharp/refs/heads/devel/README.md").ConfigureAwait(false);
+//await TextProcessor.ProcessFile(Path.Combine(Directory.GetCurrentDirectory(), "assets/book.txt")).ConfigureAwait(false);
+
+await TextProcessor.ProcessFile(Path.Combine(Directory.GetCurrentDirectory(), "assets/bruno-mars-wikipedia.txt")).ConfigureAwait(false);
 
 while (true)
 {

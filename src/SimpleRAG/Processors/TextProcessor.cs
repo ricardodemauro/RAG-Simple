@@ -26,7 +26,7 @@ public class TextProcessor
         documentEmbed.Properties.Add("fileName", Path.GetFileName(filePath));
 
         string text = await File.ReadAllTextAsync(filePath);
-        var chunks = ChunkText(text, ['.', '!', '?'], 700);
+        var chunks = ChunkText(text, ['.', '!', '?', '"'], 700);
 
         Log.Information("[bold yellow]Processing chunks...[/]");
 
@@ -72,7 +72,7 @@ public class TextProcessor
         {
             if ((currentChunk + part).Length > _maxChunkSize && currentChunk.Length >= minChars)
             {
-                chunks.Add(currentChunk.Trim());
+                chunks.Add(currentChunk.TrimStart(['\r', '\n', ' ']).TrimEnd());
                 currentChunk = part; // Start a new chunk
             }
             else
@@ -83,7 +83,7 @@ public class TextProcessor
 
         if (!string.IsNullOrEmpty(currentChunk))
         {
-            chunks.Add(currentChunk.Trim());
+            chunks.Add(currentChunk.TrimStart(['\r', '\n', ' ']).TrimEnd());
         }
 
         return chunks;
